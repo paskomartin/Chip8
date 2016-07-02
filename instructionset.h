@@ -10,13 +10,14 @@ namespace Chip8
   struct Chip8OpcodeData;
   class Instruction;
 
+
   class InstructionSet
   {
     public:
       InstructionSet();
       ~InstructionSet();
 
-      Instruction* GetInstruction(int num);
+      Instruction *GetInstruction(int num);
 
     private:
       void init();

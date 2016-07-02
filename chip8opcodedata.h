@@ -12,6 +12,7 @@ namespace Chip8
       unsigned int nnn;         // address for some instruction
       unsigned short kk;        // lowesst 8 bit of the instr
       unsigned char subFuncNum; // lowest nibble  of opcode
+      unsigned char n;
       unsigned char x;
       unsigned char y;
       //unsigned char *Vx;        // pointers to proper registers
