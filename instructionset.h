@@ -17,14 +17,14 @@ namespace Chip8
       InstructionSet();
       ~InstructionSet();
 
-      Instruction *GetInstruction(int num);
+      Instruction *GetInstruction(unsigned int key);
 
     private:
       void init();
       void clear();
 
     private:
-      std::unordered_map<int, Instruction*> commands;
+      std::unordered_map<unsigned int, Instruction*> commands;
   //    std::unordered_map<int, Instruction2*> commands;
   };
 

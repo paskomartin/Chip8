@@ -15,6 +15,8 @@ namespace Chip8
       static const unsigned int SCREEN_W = 64;
       static const unsigned int SCREEN_H = 32;
 
+      static const unsigned int fontBIOSPosition = 0x50;
+
       std::array<unsigned char, 0x1000> memory; // 4kb memory
       std::array<unsigned short, MAX_STACK> stack;
       unsigned short SP = 0;              // stack pointer
@@ -22,10 +24,14 @@ namespace Chip8
       unsigned short PC = 0x200;          // program counter
       std::array<unsigned char, MAX_REGISTERS> V;
       std::array<unsigned char, SCREEN_W * SCREEN_H> screen;
-      unsigned char keys[MAX_KEYS] { 0 };
+      std::array<unsigned char, MAX_KEYS> keys;// { 0 };
       unsigned char delayTimer = 0;
       unsigned char soundTimer = 0;
       unsigned char * const carryReg = &V[MAX_REGISTERS - 1];
+
+      // TODO: Halt flag when is error!
+      //bool haltFlag = false;
+
 
       //enum { MAX_REGISTER = 16, MAX_KEYS = 16, SCREEN_W = 64, SCREEN_H = 32 } ;
       //unsigned char memory[0x1000] {0};   // 4k memory
@@ -47,6 +53,11 @@ namespace Chip8
       inline void SetCarry(const unsigned char val)
       {
         *carryReg = val;
+      }
+
+      inline bool IsKeyPressed(unsigned char key)
+      {
+        return keys[key]; // & 0xf];
       }
 
   };

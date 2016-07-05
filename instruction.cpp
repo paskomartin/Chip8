@@ -1,18 +1,19 @@
 #include <stdexcept>
+#include <iostream>
 #include "instruction.h"
 #include "chip8internaldata.h"
 #include "chip8opcodedata.h"
 
 namespace Chip8
 {
-  void Cls::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData & /*op*/)
+  void CLS::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData & /*op*/)
   {
     chip->screen.fill(0);
     //chip->PC = (chip->PC + 2) & 0xFFF;
     chip->AdvancePC();
   }
 
-  void Ret::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData & /*op*/)
+  void RET::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData & /*op*/)
   {
     chip->PC = chip->stack[chip->SP];
     --chip->SP;
@@ -28,7 +29,7 @@ namespace Chip8
   }
 
 
-  void Call::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  void CALL::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
   {
     /* TODO: Maybe this isn't a good choice. It will be better to increase
      * stack pointer, check if is equal MAX_STACK and after throw ERROR
@@ -220,7 +221,7 @@ namespace Chip8
     chip->PC = op.nnn + chip->V[0];
   }
 
-  RND::RND()
+  RND::RND() : Instruction(0xC)
   {
     unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
     randGen.seed(seed);
@@ -268,7 +269,8 @@ namespace Chip8
 
           if(chip->screen[loc] == 1)
           {
-            *chip->carryReg = 1;
+            chip->SetCarry(1);
+            //*chip->carryReg = 1;
           }
 
           chip->screen[loc] ^= 1;
@@ -278,6 +280,122 @@ namespace Chip8
     chip->AdvancePC();
     //chip->PC += (chip->PC + 2) & 0xFFF;
   }
+
+
+  void SKP::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    if (chip->IsKeyPressed( op.x ) )
+    {
+      chip->AdvancePC();
+    }
+    chip->AdvancePC();
+  }
+
+
+  void SKPN::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    if ( !chip->IsKeyPressed( op.x ))
+    {
+      chip->AdvancePC();
+    }
+    chip->AdvancePC();
+  }
+
+
+  void LD_VX::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    chip->V[op.x] = chip->delayTimer;
+    chip->AdvancePC();
+  }
+
+
+  void LD_K::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    for(unsigned char key = 0; key < chip->keys.size(); ++key)
+    {
+      // if key is pressed, set the key number to the Vx
+      // and set PC += 2
+      if (chip->keys[key] != 0)
+      {
+        chip->V[ op.x ] = key;
+        chip->AdvancePC();
+        return;
+      }
+      // otherwise do LD_K in another cpu cycle
+    }
+  }
+
+
+  void LD_DT::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    chip->delayTimer = chip->V[ op.x ];
+    chip->AdvancePC();
+  }
+
+
+  void LD_ST::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    chip->soundTimer = chip->V[ op.x ];
+    chip->AdvancePC();
+  }
+
+
+  void ADD_I::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    chip->I = chip->V[ op.x ];
+    chip->AdvancePC();
+  }
+
+  void LD_F::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    // Each letter is 4 width and 5 height, so it needs to multiply by 5
+    // (because is an offset where each letter starts)
+    // eg. x = 6, so programmer want to display number 6 on screen
+    // I must be setted like this: 0x50 + letter_number * height_of_letter
+    chip->I = chip->fontBIOSPosition + (chip->V[op.x] * 5);
+    chip->AdvancePC();
+  }
+
+
+  void LD_B::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    unsigned char val = chip->V[op.x];
+    // hundreds
+    chip->memory[ chip->I ] = ( val / 100 ) % 10;
+    chip->memory[ chip->I + 1 ] = ( val / 10 ) % 10;
+    chip->memory[ chip->I + 2 ] = val % 10;
+
+    chip->AdvancePC();
+  }
+
+
+  void LD_REG_TO_MEM::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    for (unsigned char i = 0; i <= op.x; ++i)
+    {
+      chip->memory[ chip->I & 0xFFF ] = chip->V[i];
+      ++chip->I;
+    }
+    chip->AdvancePC();
+  }
+
+  void LD_MEM_TO_REG::execute(std::shared_ptr<Chip8InternalData> chip, Chip8OpcodeData &op)
+  {
+    for (unsigned int i = 0; i <= op.x; ++i)
+    {
+      chip->V[i] = chip->memory[ chip->I & 0xFFF ];
+      ++chip->I;
+    }
+    chip->AdvancePC();
+  }
+
+  void UNDF_INSTR::execute(std::shared_ptr<Chip8InternalData> /*chip*/, Chip8OpcodeData &op)
+  {
+    std::cerr << "Undefined opcode: " << op.opcode << "\n";
+    // TODO: Warning message
+  }
+
+
 }
 
 

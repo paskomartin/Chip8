@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += console c++14
+CONFIG += console c++14 Wall Wextra pedantic
 CONFIG -= app_bundle
 CONFIG -= qt
 

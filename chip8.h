@@ -23,8 +23,8 @@ class Chip8
     void init();
 
     unsigned short fetchOpcode();
-    void decodeOpcode(Chip8OpcodeData& op);
-    void executeOpcode(Chip8OpcodeData &opcode);
+    void decodeOpcode(Chip8OpcodeData &op);
+    void executeOpcode(Chip8OpcodeData &op);
 
     void increasePC(unsigned int counter = 2);
     void setCarryFlag();

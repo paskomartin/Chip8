@@ -44,24 +44,59 @@ namespace Chip8
     op.y = (opcode >> 4) & 0xf;
   }
 
-  void Chip8::executeOpcode(Chip8OpcodeData &opcode)
+  // TODO: To implement later
+  void Chip8::executeOpcode(Chip8OpcodeData &op)
   {
+    unsigned int funcNum = 0;
+    if (op.funcNum == 0)
+    {
+      funcNum = op.opcode;
+    }
+    else if (op.funcNum > 0 && op.funcNum < 8)
+    {
+      funcNum = op.funcNum;
+      if (op.funcNum == 5)
+      {
+        funcNum = 0x50;
+      }
+    }
+    else if ( (op.funcNum == 8) | (op.funcNum == 9) )
+    {
+      funcNum = (op.funcNum << 8) | op.subFuncNum;
+    }
+    else if ( (op.funcNum >= 0xA) | (op.funcNum < 0xE) )
+    {
+      funcNum = op.funcNum;
+    }
+    else if (op.funcNum == 0xE || op.funcNum == 0xF)
+    {
+      funcNum = (op.funcNum << 24) | (op.kk);
+    }
+    else
+    {
+      funcNum = 0xFFFF;
+    }
 
+    Instruction *instr = instructions->GetInstruction(funcNum);
+    instr->execute(data, op);
   }
 
   void Chip8::increasePC(unsigned int counter)
   {
-    data->PC += counter;
+    data->AdvancePC(counter);
+    //data->PC += counter;
   }
 
   void Chip8::setCarryFlag()
   {
-    *(data->carryReg) = 1;
+    data->SetCarry(1);
+    //*(data->carryReg) = 1;
   }
 
   void Chip8::unsetCarryFlag()
   {
-    *(data->carryReg) = 0;
+    data->SetCarry(0);
+    //*(data->carryReg) = 0;
   }
 
 }
